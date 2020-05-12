@@ -18,4 +18,4 @@ Route::get('/', function () {
 });
 
 Route::resource('sites','SiteController');
-// Route::resource('sites/build','SiteController@build');
+Route::post('sites/build', 'SiteController@build')->name('build');

@@ -34,7 +34,7 @@
         @foreach ($sites as $site)
         <tr>
             <td>{{ ++$i }}</td>
-            <td>{{ $site->app_name }}</td>
+            <td><a href="{{ route('sites.show',$site->id) }}">{{ $site->app_name }}</a></td>
             <td>{{ $site->slug }}</td>
             <td>{{ $site->app_id }}</td>
             <td>{{ $site->bundle_id }}</td>
@@ -44,14 +44,10 @@
             <td>{{ $site->url_wa }}</td>
             <td>
                 <form action="{{ route('sites.destroy',$site->id) }}" method="POST">
-   
-                    <a class="btn btn-info" href="{{ route('sites.show',$site->id) }}">Show</a>
-    
                     <a class="btn btn-primary" href="{{ route('sites.edit',$site->id) }}">Edit</a>
-   
+
                     @csrf
                     @method('DELETE')
-      
                     <button type="submit" class="btn btn-danger">Delete</button>
                 </form>
             </td>
