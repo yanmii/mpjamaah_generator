@@ -160,6 +160,7 @@ class SiteController extends Controller
 
         $manifest_file_path = '/Users/mrkahvi/android-projects/MIP/jamaah/android/app/src/main/AndroidManifest.xml';
         $manifest = simplexml_load_file($manifest_file_path);
+        $manifest->application->attributes("android",TRUE)->icon = "@mipmap/" . $site->ic_file;
         $manifest->application->{'meta-data'}[0]->attributes("android",TRUE)->value = $site->ts_license_key;
         $manifest->asXML($manifest_file_path);
         $dom = dom_import_simplexml($manifest)->ownerDocument;
@@ -174,6 +175,45 @@ class SiteController extends Controller
         $new_text = $site->app_id;
         $build_content = str_replace("applicationId \"" .  $text . "\"", "applicationId \"" .  $new_text . "\"", $build_content);
         file_put_contents($build_file_path, $build_content);
+
+
+        $build_file_path = '/Users/mrkahvi/android-projects/MIP/jamaah/ios/Runner.xcodeproj/project.pbxproj';
+        $build_content =  file_get_contents($build_file_path);
+        $splitted = explode("PRODUCT_BUNDLE_IDENTIFIER = ", $build_content);
+        $splitted2 = explode(";", $splitted[1]);
+        $text = $splitted2[0];
+        $new_text = $site->bundle_id;
+        $build_content = str_replace("PRODUCT_BUNDLE_IDENTIFIER = " .  $text . ";", "PRODUCT_BUNDLE_IDENTIFIER = " .  $new_text . ";", $build_content);
+
+        $splitted = explode("PRODUCT_NAME = \"", $build_content);
+        $splitted2 = explode("\";", $splitted[1]);
+        $text = $splitted2[0];
+        $new_text = $site->app_name;
+        $build_content = str_replace("PRODUCT_NAME = \"" .  $text . "\";", "PRODUCT_NAME = \"" .  $new_text . "\";", $build_content);
+        file_put_contents($build_file_path, $build_content);
+
+
+        $plist_file_path = '/Users/mrkahvi/android-projects/MIP/jamaah/ios/Runner/info.plist';
+        $plist = simplexml_load_file($plist_file_path);
+        $plist->dict->string[4] = $site->app_name;
+        $plist->asXML($plist_file_path);
+        $dom = dom_import_simplexml($plist)->ownerDocument;
+        $dom->formatOutput = true;
+
+        $srcfile = '/Users/mrkahvi/android-projects/MIP/jamaah/ios/googleserviceplist/' . $site->slug . '/GoogleService-Info.plist';
+        $destfile = '/Users/mrkahvi/android-projects/MIP/jamaah/ios/Runner/GoogleService-Info.plist';
+        copy($srcfile, $destfile);
+
+
+        $srcfile = '/Users/mrkahvi/android-projects/MIP/jamaah/ios/Runner/Assets.xcassets/icon/' . $site->slug . '/AppIcon.appiconset';
+        $destfile = '/Users/mrkahvi/android-projects/MIP/jamaah/ios/Runner/Assets.xcassets';
+
+        $output = shell_exec('cp -r ' . $srcfile . ' ' . $destfile);
+        // echo "<pre>$output</pre>";
+        // $output = shell_exec('flutter clean');
+        // echo "<pre>$output</pre>";
+        // $output = shell_exec('flutter build apk --release');
+        // echo "<pre>$output</pre>";
   
     }
 
@@ -189,6 +229,64 @@ class SiteController extends Controller
   
         return redirect()->route('sites.index')
                         ->with('success','site deleted successfully');
+    }
+
+    public function xcopy($source, $dest, $permissions = 0755)
+    {
+        $sourceHash = self::hashDirectory($source);
+        // Check for symlinks
+        if (is_link($source)) {
+            return symlink(readlink($source), $dest);
+        }
+
+        // Simple copy for a file
+        if (is_file($source)) {
+            return copy($source, $dest);
+        }
+
+        // Make destination directory
+        if (!is_dir($dest)) {
+            mkdir($dest, $permissions);
+        }
+
+        // Loop through the folder
+        $dir = dir($source);
+        while (false !== $entry = $dir->read()) {
+            // Skip pointers
+            if ($entry == '.' || $entry == '..') {
+                continue;
+            }
+
+            // Deep copy directories
+            if($sourceHash != self::hashDirectory($source."/".$entry)){
+                 xcopy("$source/$entry", "$dest/$entry", $permissions);
+            }
+        }
+
+        // Clean up
+        $dir->close();
+        return true;
+    }
+
+    // In case of coping a directory inside itself, there is a need to hash check the directory otherwise and infinite loop of coping is generated
+
+    function hashDirectory($directory)
+    {
+        if (! is_dir($directory)){ return false; }
+
+        $files = array();
+        $dir = dir($directory);
+
+        while (false !== ($file = $dir->read())){
+            if ($file != '.' and $file != '..') {
+                if (is_dir($directory . '/' . $file)) { $files[] = hashDirectory($directory . '/' . $file); }
+                else { $files[] = md5_file($directory . '/' . $file); }
+            }
+        }
+
+        $dir->close();
+
+        return md5(implode('', $files));
     }
 
 }
