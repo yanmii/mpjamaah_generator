@@ -212,7 +212,7 @@ class SiteController extends Controller
         // echo "<pre>$output</pre>";
 
         
-        $output = shell_exec('cd /Users/mrkahvi/android-projects/MIP/jamaah/ && flutter clean && flutter build apk --release && flutter build ios --release');
+        $output = shell_exec('flutter clean && flutter build apk --release && flutter build ios --release');
         echo "<pre>$output</pre>";
   
     }
