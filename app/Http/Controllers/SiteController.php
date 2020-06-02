@@ -210,10 +210,10 @@ class SiteController extends Controller
 
         $output = shell_exec('cp -r ' . $srcfile . ' ' . $destfile);
         // echo "<pre>$output</pre>";
-        // $output = shell_exec('flutter clean');
-        // echo "<pre>$output</pre>";
-        // $output = shell_exec('flutter build apk --release');
-        // echo "<pre>$output</pre>";
+
+        
+        $output = shell_exec('cd /Users/mrkahvi/android-projects/MIP/jamaah/ && flutter clean && flutter build apk --release && flutter build ios --release');
+        echo "<pre>$output</pre>";
   
     }
 
